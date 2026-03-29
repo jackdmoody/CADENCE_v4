@@ -14,6 +14,12 @@ All notable changes to CADENCE are documented here.
   console, pipeline funnel metrics, per-output download buttons, and inline SHAP visualizations.
   Run with `streamlit run cadence_app.py`.
 
+- **Dash GUI (`cadence_app_dash.py`)** — Identical feature set to the Streamlit GUI, built on
+  Plotly Dash. Key differences: pipeline runs in a background thread with `dcc.Interval` log
+  polling (UI stays responsive during long runs), and all widget interactions trigger targeted
+  callbacks rather than full script reruns. Run with `python cadence_app_dash.py [--port N]
+  [--debug]`. Both GUIs are maintained in parallel.
+
 - **Parquet ingestion** — `loaders.py` adds `load_parquet()`. `IOConfig` adds `input_parquet`
   field. `load_and_prepare()` priority order: unified → parquet → CSV → ISF.
 
@@ -102,7 +108,8 @@ All notable changes to CADENCE are documented here.
 |---|---|---|
 | `pyarrow` | ≥14.0 | Parquet read/write via `pd.read_parquet()` |
 | `shap` | ≥0.44 | IForest TreeExplainer, beeswarm + waterfall plots |
-| `streamlit` | ≥1.32 | GUI (optional extra: `pip install cadence-analytic[gui]`) |
+| `streamlit` | ≥1.32 | Streamlit GUI (optional extra: `pip install cadence-analytic[gui-streamlit]`) |
+| `dash` | ≥2.14 | Dash GUI (optional extra: `pip install cadence-analytic[gui-dash]`) |
 
 ---
 

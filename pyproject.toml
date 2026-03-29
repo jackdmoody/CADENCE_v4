@@ -25,13 +25,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-gui = ["streamlit>=1.32"]
-dev = ["pytest>=7.0", "pytest-cov", "ipykernel"]
-all = ["streamlit>=1.32", "pytest>=7.0", "pytest-cov", "ipykernel"]
+gui-streamlit = ["streamlit>=1.32"]
+gui-dash      = ["dash>=2.14"]
+gui           = ["streamlit>=1.32", "dash>=2.14"]
+dev           = ["pytest>=7.0", "pytest-cov", "ipykernel"]
+all           = ["streamlit>=1.32", "dash>=2.14", "pytest>=7.0", "pytest-cov", "ipykernel"]
 
 [project.scripts]
-cadence      = "analytic_pipeline.pipeline:main"
-cadence-gui  = "cadence_app:main"
+cadence           = "analytic_pipeline.pipeline:main"
+cadence-streamlit = "cadence_app:main"
+cadence-dash      = "cadence_app_dash:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
