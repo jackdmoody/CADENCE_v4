@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cadence-analytic"
+version = "4.0.0"
+description = "CADENCE: C2 Anomaly Detection via Ensemble Network Correlation Evidence"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+keywords = ["network security", "C2 detection", "beacon detection", "zeek", "anomaly detection", "shap", "isolation forest"]
+
+dependencies = [
+  "pandas>=2.0",
+  "numpy>=1.24",
+  "scikit-learn>=1.3",
+  "scipy>=1.10",
+  "statsmodels>=0.14",
+  "matplotlib>=3.7",
+  "seaborn>=0.12",
+  "joblib>=1.3",
+  "pyarrow>=14.0",   # Parquet ingestion
+  "shap>=0.44",      # IForest explainability
+]
+
+[project.optional-dependencies]
+gui = ["streamlit>=1.32"]
+dev = ["pytest>=7.0", "pytest-cov", "ipykernel"]
+all = ["streamlit>=1.32", "pytest>=7.0", "pytest-cov", "ipykernel"]
+
+[project.scripts]
+cadence      = "analytic_pipeline.pipeline:main"
+cadence-gui  = "cadence_app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["analytic_pipeline*"]
+
+[tool.pytest.ini_options]
+testpaths = ["analytic_pipeline"]
+python_files = ["test_*.py"]
+log_cli = true
+log_cli_level = "INFO"
