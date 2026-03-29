@@ -21,13 +21,13 @@ import io
 import json
 import logging
 import os
+import subprocess
 import sys
 import tempfile
 import threading
 import time
 from pathlib import Path
 
-import pandas as pd
 import streamlit as st
 
 # ---------------------------------------------------------------------------
@@ -40,6 +40,98 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# ---------------------------------------------------------------------------
+# Dependency check — runs before any pipeline import
+# ---------------------------------------------------------------------------
+
+_REQUIRED = {
+    "pandas":       ("pandas",       "pandas>=2.0"),
+    "numpy":        ("numpy",        "numpy>=1.24"),
+    "sklearn":      ("scikit-learn", "scikit-learn>=1.3"),
+    "scipy":        ("scipy",        "scipy>=1.10"),
+    "statsmodels":  ("statsmodels",  "statsmodels>=0.14"),
+    "matplotlib":   ("matplotlib",   "matplotlib>=3.7"),
+    "pyarrow":      ("pyarrow",      "pyarrow>=14.0"),
+    "shap":         ("shap",         "shap>=0.44"),
+}
+
+_CADENCE_PKG = Path(__file__).parent / "analytic_pipeline" / "__init__.py"
+
+
+def _check_dependencies() -> tuple[list[str], list[str]]:
+    """Return (missing_packages, install_commands)."""
+    missing, cmds = [], []
+    for import_name, (pkg_name, pin) in _REQUIRED.items():
+        try:
+            __import__(import_name)
+        except ImportError:
+            missing.append(pkg_name)
+            cmds.append(pin)
+    return missing, cmds
+
+
+def _check_cadence_package() -> bool:
+    return _CADENCE_PKG.exists()
+
+
+def _auto_install(pins: list[str]) -> tuple[bool, str]:
+    """Attempt pip install; return (success, output)."""
+    cmd = [sys.executable, "-m", "pip", "install"] + pins
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=180)
+        return result.returncode == 0, result.stdout + result.stderr
+    except Exception as e:
+        return False, str(e)
+
+
+missing_pkgs, install_pins = _check_dependencies()
+cadence_present = _check_cadence_package()
+
+if missing_pkgs or not cadence_present:
+    st.markdown("## ⚙️ CADENCE — Setup Required")
+
+    if not cadence_present:
+        st.error(
+            "**`analytic_pipeline` package not found.**\n\n"
+            "Make sure you are running from the CADENCE repo root:\n"
+            "```bash\n"
+            "cd /path/to/CADENCE\n"
+            "streamlit run cadence_app.py\n"
+            "```"
+        )
+
+    if missing_pkgs:
+        st.warning(
+            f"**{len(missing_pkgs)} missing dependenc{'y' if len(missing_pkgs) == 1 else 'ies'} "
+            f"detected:** {', '.join(missing_pkgs)}"
+        )
+
+        col1, col2 = st.columns([1, 2])
+        with col1:
+            auto_btn = st.button("⬇️  Install automatically", use_container_width=True)
+        with col2:
+            st.code("pip install " + " ".join(install_pins), language="bash")
+
+        if auto_btn:
+            with st.spinner(f"Installing {', '.join(missing_pkgs)}…"):
+                ok, output = _auto_install(install_pins)
+            if ok:
+                st.success("✅ Installation complete — reloading…")
+                st.code(output[-2000:] if len(output) > 2000 else output)
+                st.rerun()
+            else:
+                st.error("❌ Installation failed. Run the command above manually.")
+                st.code(output)
+
+    if not cadence_present or missing_pkgs:
+        st.stop()   # halt — do not render the rest of the app
+
+# ---------------------------------------------------------------------------
+# All deps confirmed present — safe to import
+# ---------------------------------------------------------------------------
+
+import pandas as pd
 
 # ---------------------------------------------------------------------------
 # Styling
